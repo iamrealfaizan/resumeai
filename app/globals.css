@@ -2,6 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+
+  body {
+    background: white;
+  }
+
+  /* Hide everything by default */
+  body>* {
+    display: none;
+  }
+
+  /* Only show the main content area */
+  main {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+  }
+
+  /* Hide specific UI elements */
+  nav,
+  footer,
+  button,
+  .print\:hidden {
+    display: none !important;
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
