@@ -12,15 +12,17 @@ import { clsx } from "clsx";
 export default function Home() {
   const [step, setStep] = useState(1);
   const [resumeText, setResumeText] = useState("");
+  const [resumeData, setResumeData] = useState<any>(null); // Structured data
   const [resumeName, setResumeName] = useState("");
   const [jdText, setJdText] = useState("");
   const [analysisResult, setAnalysisResult] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [optimizedLines, setOptimizedLines] = useState<string[]>([]);
 
-  const handleResumeUpload = (text: string, name: string) => {
+  const handleResumeUpload = (text: string, name: string, structured?: any) => {
     setResumeText(text);
     setResumeName(name);
+    if (structured) setResumeData(structured);
     if (text) setTimeout(() => setStep(2), 500);
   };
 
@@ -46,13 +48,41 @@ export default function Home() {
     }
   };
 
+  // Helper to convert structured data back to lines for preview
+  const convertToLines = (data: any): string[] => {
+    if (!data) return [];
+    const lines: string[] = [];
+    if (data.header) {
+      lines.push(data.header.name);
+      lines.push(data.header.contact);
+      if (data.header.links) lines.push(...data.header.links);
+    }
+    if (data.summary) {
+      lines.push("PROFESSIONAL SUMMARY");
+      lines.push(data.summary);
+    }
+    if (data.experience) {
+      lines.push("EXPERIENCE");
+      data.experience.forEach((exp: any) => {
+        lines.push(`${exp.role} | ${exp.company} | ${exp.duration}`);
+        if (Array.isArray(exp.description)) lines.push(...exp.description.map((d: string) => `- ${d}`));
+        else lines.push(exp.description);
+      });
+    }
+    if (data.skills) {
+      lines.push("SKILLS");
+      lines.push(Array.isArray(data.skills) ? data.skills.join(", ") : data.skills);
+    }
+    return lines;
+  };
+
   return (
     <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl tracking-tight">
-            Resume<span className="text-blue-600">AI</span> Optimizer
+            Resume<span className="text-blue-600">AI</span>
           </h1>
           <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
             Align your resume with any job description using advanced AI analysis.
@@ -63,7 +93,7 @@ export default function Home() {
         {/* Progress Steps */}
         <div className="mb-12">
           <div className="flex items-center justify-center space-x-4">
-            {[1, 2, 3].map((s) => (
+            {[1, 2, 3, 4, 5].map((s) => (
               <div key={s} className="flex items-center">
                 <div className={clsx(
                   "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-200",
@@ -71,7 +101,7 @@ export default function Home() {
                 )}>
                   {s}
                 </div>
-                {s < 3 && (
+                {s < 5 && (
                   <div className={clsx(
                     "w-12 h-1 mx-2 rounded transition-colors duration-200",
                     step > s ? "bg-blue-600" : "bg-gray-200"
@@ -93,7 +123,8 @@ export default function Home() {
             <div className="space-y-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
               <h2 className="text-2xl font-bold text-gray-900">Upload Your Resume</h2>
               <p className="text-gray-500">We support PDF, DOCX, and TXT formats.</p>
-              <ResumeUpload onUploadComplete={handleResumeUpload} />
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              <ResumeUpload onUploadComplete={(text: string, name: string, structured?: any) => handleResumeUpload(text, name, structured)} />
             </div>
           )}
 
@@ -178,14 +209,20 @@ export default function Home() {
                   <ChevronLeft className="w-4 h-4 mr-1" /> Back to Analysis
                 </button>
               </div>
-              <OptimizationEditor
-                resumeText={resumeText}
-                jdText={jdText}
-                onComplete={(lines) => {
-                  setOptimizedLines(lines);
-                  setStep(5);
-                }}
-              />
+              {resumeData ? (
+                <OptimizationEditor
+                  resumeData={resumeData}
+                  jdText={jdText}
+                  onComplete={(data) => {
+                    setOptimizedLines(convertToLines(data));
+                    setStep(5);
+                  }}
+                />
+              ) : (
+                <div className="text-center p-8 text-gray-500">
+                  Structured data not available. Please re-upload.
+                </div>
+              )}
             </div>
           )}
 

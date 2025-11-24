@@ -5,7 +5,7 @@ import { Upload, FileText, X, CheckCircle } from "lucide-react";
 import { clsx } from "clsx";
 
 interface ResumeUploadProps {
-  onUploadComplete: (text: string, fileName: string) => void;
+  onUploadComplete: (text: string, fileName: string, structured?: any) => void;
 }
 
 export default function ResumeUpload({ onUploadComplete }: ResumeUploadProps) {
@@ -26,7 +26,7 @@ export default function ResumeUpload({ onUploadComplete }: ResumeUploadProps) {
 
   const processFile = async (file: File) => {
     if (!file) return;
-    
+
     // Validate file type
     const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
     if (!validTypes.includes(file.type)) {
@@ -52,7 +52,7 @@ export default function ResumeUpload({ onUploadComplete }: ResumeUploadProps) {
       }
 
       const data = await response.json();
-      onUploadComplete(data.text, file.name);
+      onUploadComplete(data.text, file.name, data.structured);
     } catch (err) {
       console.error(err);
       setError("Failed to parse resume. Please try again or paste text manually.");
